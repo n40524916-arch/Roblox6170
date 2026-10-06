@@ -1,0 +1,1739 @@
+-- ============================================================
+-- AuraMods v1.0  |  Universal Executor UI
+-- Delta / Solara / Wave / Xeno / Synapse / Fluxus uyumlu
+-- ============================================================
+
+-- ================== SERVİSLER ==================
+local CoreGui            = game:GetService("CoreGui")
+local Players            = game:GetService("Players")
+local RunService         = game:GetService("RunService")
+local Stats              = game:GetService("Stats")
+local TweenService       = game:GetService("TweenService")
+local UserInputService   = game:GetService("UserInputService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TextService        = game:GetService("TextService")
+local Lighting           = game:GetService("Lighting")
+local player             = Players.LocalPlayer
+local camera             = workspace.CurrentCamera
+local VERSION            = "v1.0"
+
+-- Eski GUI temizliği
+local oldGui = CoreGui:FindFirstChild("AuraMods")
+if oldGui then oldGui:Destroy() end
+
+-- Drawing API kontrolü
+local hasDrawing = pcall(function()
+    local t = Drawing.new("Square")
+    t:Remove()
+end)
+
+-- ================== DİL SİSTEMİ ==================
+local translations = {
+    en = {
+        esp="ESP", aimbot="Aimbot", player_cat="Player", settings="Settings",
+        group_visuals="Visuals", group_info="Info", group_extra="Extra",
+        group_general="General", group_checks="Checks", group_aimcfg="Aim Settings",
+        group_movement="Movement", group_flight="Flight", group_exploits="Exploits", group_teleport="Teleport",
+        group_appearance="Appearance", group_performance="Performance", group_language="Language", group_danger="Danger",
+        body="Body ESP", box="Box ESP", corner="Corner Box", filled="Filled Box",
+        health="Health Bar", wall="Wall Check", team="Team Check",
+        tracers="Tracers", name="Name", distance="Distance", headdot="Head Dot",
+        enable_aim="Enable Aimbot", hold_mode="Hold Mode (RMB)", visible_only="Visible Only",
+        prediction="Prediction", fov="FOV", smoothness="Smoothness",
+        walk_speed="Walk Speed", jump_power="Jump Power", hip_height="Hip Height",
+        fly="Fly", fly_speed="Fly Speed", noclip="Noclip", inf_jump="Infinite Jump",
+        click_tp="Click TP", god_mode="God Mode", tp_player="Teleport to Player", tp_btn="TP",
+        reset="Reset Menu", language="Language", theme="Theme",
+        potato="Potato Mode", potato_desc="Boost FPS",
+        fullbright="Fullbright",
+        theme_white="White", theme_red="Red", theme_green="Green", theme_blue="Blue",
+        theme_purple="Purple", theme_cyan="Cyan", theme_rgb="RGB"
+    },
+    tr = {
+        esp="ESP", aimbot="Aimbot", player_cat="Oyuncu", settings="Ayarlar",
+        group_visuals="Görseller", group_info="Bilgi", group_extra="Ekstra",
+        group_general="Genel", group_checks="Kontroller", group_aimcfg="Nişan Ayarları",
+        group_movement="Hareket", group_flight="Uçuş", group_exploits="Hileler", group_teleport="Işınlanma",
+        group_appearance="Görünüm", group_performance="Performans", group_language="Dil", group_danger="Tehlikeli",
+        body="Vücut ESP", box="Kutu ESP", corner="Köşe Kutu", filled="Dolu Kutu",
+        health="Can Barı", wall="Duvar Kontrolü", team="Takım Kontrolü",
+        tracers="İz Çizgileri", name="İsim", distance="Mesafe", headdot="Kafa Noktası",
+        enable_aim="Aimbot Aç", hold_mode="Basılı Tut (RMB)", visible_only="Sadece Görünür",
+        prediction="Tahmin", fov="Görüş Alanı", smoothness="Yumuşaklık",
+        walk_speed="Yürüme Hızı", jump_power="Zıplama Gücü", hip_height="Kalça Yüksekliği",
+        fly="Uçma", fly_speed="Uçuş Hızı", noclip="Duvardan Geç", inf_jump="Sonsuz Zıplama",
+        click_tp="Tıkla Işınlan", god_mode="Ölümsüz Mod", tp_player="Oyuncuya Işınlan", tp_btn="Işınlan",
+        reset="Menüyü Sıfırla", language="Dil", theme="Tema",
+        potato="Patates Mod", potato_desc="FPS Arttır",
+        fullbright="Tam Parlaklık",
+        theme_white="Beyaz", theme_red="Kırmızı", theme_green="Yeşil", theme_blue="Mavi",
+        theme_purple="Mor", theme_cyan="Camgöbeği", theme_rgb="RGB"
+    },
+    ru = {
+        esp="ESP", aimbot="Аимбот", player_cat="Игрок", settings="Настройки",
+        group_visuals="Визуалы", group_info="Инфо", group_extra="Дополнительно",
+        group_general="Основное", group_checks="Проверки", group_aimcfg="Настройки аима",
+        group_movement="Движение", group_flight="Полёт", group_exploits="Читы", group_teleport="Телепорт",
+        group_appearance="Внешний вид", group_performance="Производительность", group_language="Язык", group_danger="Опасно",
+        body="Тело ESP", box="Бокс ESP", corner="Угловой бокс", filled="Залитый бокс",
+        health="Полоса HP", wall="Проверка стен", team="Проверка команды",
+        tracers="Трассеры", name="Имя", distance="Дистанция", headdot="Точка головы",
+        enable_aim="Включить Аимбот", hold_mode="Удержание (ПКМ)", visible_only="Только видимые",
+        prediction="Предсказание", fov="Угол обзора", smoothness="Плавность",
+        walk_speed="Скорость ходьбы", jump_power="Сила прыжка", hip_height="Высота бедра",
+        fly="Полёт", fly_speed="Скорость полёта", noclip="Сквозь стены", inf_jump="Бесконечный прыжок",
+        click_tp="Клик-ТП", god_mode="Бессмертие", tp_player="Телепорт к игроку", tp_btn="ТП",
+        reset="Сбросить меню", language="Язык", theme="Тема",
+        potato="Картофельный режим", potato_desc="Ускорение FPS",
+        fullbright="Полная яркость",
+        theme_white="Белый", theme_red="Красный", theme_green="Зелёный", theme_blue="Синий",
+        theme_purple="Фиолетовый", theme_cyan="Голубой", theme_rgb="RGB"
+    }
+}
+local currentLang = "en"
+
+local function T(key)
+    local lang = translations[currentLang] or translations.en
+    return lang[key] or key
+end
+
+-- ================== THEME SİSTEMİ ==================
+local THEMES = {
+    { key="theme_white",  color=Color3.fromRGB(255,255,255), rgb=false },
+    { key="theme_red",    color=Color3.fromRGB(255,70,70),   rgb=false },
+    { key="theme_green",  color=Color3.fromRGB(70,255,120),  rgb=false },
+    { key="theme_blue",   color=Color3.fromRGB(70,140,255),  rgb=false },
+    { key="theme_purple", color=Color3.fromRGB(180,70,255),  rgb=false },
+    { key="theme_cyan",   color=Color3.fromRGB(70,230,255),  rgb=false },
+    { key="theme_rgb",    color=Color3.fromRGB(255,255,255), rgb=true  },
+}
+local currentThemeIndex = 1
+local currentThemeColor = THEMES[1].color
+
+local themeListeners = {}
+local function addThemeListener(fn)
+    table.insert(themeListeners, fn)
+    pcall(fn, currentThemeColor)
+end
+
+-- RGB renk üretici
+local function hueToRgb(h)
+    h = h % 1
+    local r = math.abs(h * 6 - 3) - 1
+    local g = 2 - math.abs(h * 6 - 2)
+    local b = 2 - math.abs(h * 6 - 4)
+    return Color3.new(
+        math.clamp(r, 0, 1),
+        math.clamp(g, 0, 1),
+        math.clamp(b, 0, 1)
+    )
+end
+
+-- Tema değişim döngüsü
+task.spawn(function()
+    local hue = 0
+    while true do
+        task.wait(0.05)
+        local theme = THEMES[currentThemeIndex]
+        if theme.rgb then
+            hue = hue + 0.01
+            if hue > 1 then hue = 0 end
+            currentThemeColor = hueToRgb(hue)
+            for _, fn in ipairs(themeListeners) do
+                pcall(fn, currentThemeColor)
+            end
+        end
+    end
+end)
+
+-- ================== AYARLAR ==================
+local ESP = {
+    body=false, box=false, corner=false, filled=false, health=false,
+    wallCheck=false, teamCheck=false, tracers=false, name=false, distance=false, headDot=false
+}
+local AIM = {
+    enabled=false, fov=100, smoothness=0.15,
+    teamCheck=false, wallCheck=false, visibleOnly=true, prediction=false, holdMode=false
+}
+local PLAYER = {
+    walkSpeed=16, jumpPower=50, hipHeight=2,
+    fly=false, flySpeed=50, noclip=false, infJump=false, clickTP=false, godMode=false
+}
+local FULLBRIGHT = false
+local POTATO = false
+
+local COLOR_VISIBLE = Color3.fromRGB(0, 255, 80)
+local COLOR_HIDDEN  = Color3.fromRGB(255, 40, 40)
+
+-- ================== GUI ==================
+local gui = Instance.new("ScreenGui")
+gui.Name = "AuraMods"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 999
+pcall(function() gui.Parent = CoreGui end)
+if not gui.Parent then gui.Parent = player:WaitForChild("PlayerGui") end
+
+-- Yardımcılar
+local function stroke(p, t, c, tr)
+    local s = Instance.new("UIStroke")
+    s.Thickness = t
+    s.Color = c or Color3.fromRGB(255,255,255)
+    s.Transparency = tr or 0
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = p
+    return s
+end
+
+local function corner(p, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r or 0)
+    c.Parent = p
+    return c
+end
+
+local function draggable(frame, handle)
+    local dragging, dragStart, startPos = false, nil, nil
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if not dragging then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            local d = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+        end
+    end)
+end
+
+local function slideIn(frame)
+    local target = frame:GetAttribute("TargetPos")
+    local base = frame:GetAttribute("BaseBG") or 0.3
+    frame.Visible = true
+    frame.Position = UDim2.new(target.X.Scale, target.X.Offset, target.Y.Scale, target.Y.Offset - 40)
+    frame.BackgroundTransparency = 1
+    TweenService:Create(frame, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = target, BackgroundTransparency = base
+    }):Play()
+    for _, d in ipairs(frame:GetDescendants()) do
+        if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+            d.TextTransparency = 1
+            TweenService:Create(d, TweenInfo.new(0.45), {TextTransparency = 0}):Play()
+        elseif d:IsA("UIStroke") then
+            local t = d:GetAttribute("BaseT") or 0
+            TweenService:Create(d, TweenInfo.new(0.45), {Transparency = t}):Play()
+        elseif d:IsA("Frame") and d:GetAttribute("BaseBG") then
+            local b = d:GetAttribute("BaseBG")
+            d.BackgroundTransparency = 1
+            TweenService:Create(d, TweenInfo.new(0.45), {BackgroundTransparency = b}):Play()
+        end
+    end
+end
+
+local function slideOut(frame, cb)
+    local target = frame:GetAttribute("TargetPos")
+    local t = TweenService:Create(frame, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Position = UDim2.new(target.X.Scale, target.X.Offset, target.Y.Scale, target.Y.Offset - 40),
+        BackgroundTransparency = 1
+    })
+    for _, d in ipairs(frame:GetDescendants()) do
+        if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+            TweenService:Create(d, TweenInfo.new(0.32), {TextTransparency = 1}):Play()
+        elseif d:IsA("UIStroke") then
+            TweenService:Create(d, TweenInfo.new(0.32), {Transparency = 1}):Play()
+        elseif d:IsA("Frame") and d:GetAttribute("BaseBG") then
+            TweenService:Create(d, TweenInfo.new(0.32), {BackgroundTransparency = 1}):Play()
+        end
+    end
+    t.Completed:Connect(function()
+        frame.Visible = false
+        frame.Position = target
+        if cb then cb() end
+    end)
+    t:Play()
+end
+
+-- ================== ANA MENÜ ==================
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.new(0, 660, 0, 420)
+local mainPos = UDim2.new(0.5, -330, 0.5, -210)
+main.Position = mainPos
+main.BackgroundColor3 = Color3.fromRGB(0,0,0)
+main.BackgroundTransparency = 0.3
+main.BorderSizePixel = 0
+main.Active = true
+main.ClipsDescendants = false
+main.Parent = gui
+main:SetAttribute("BaseBG", 0.3)
+main:SetAttribute("TargetPos", mainPos)
+corner(main, 6)
+
+local mainStroke = stroke(main, 2, Color3.fromRGB(255,255,255), 0)
+mainStroke:SetAttribute("BaseT", 0)
+
+addThemeListener(function(c)
+    mainStroke.Color = c
+    main.BackgroundColor3 = Color3.new(c.R*0.06, c.G*0.06, c.B*0.06)
+end)
+
+-- ================== HEADER ==================
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 46)
+header.BackgroundColor3 = Color3.fromRGB(10,10,10)
+header.BackgroundTransparency = 0.25
+header.BorderSizePixel = 0
+header.Parent = main
+header:SetAttribute("BaseBG", 0.25)
+
+local headerLine = Instance.new("Frame")
+headerLine.Size = UDim2.new(1, -20, 0, 1)
+headerLine.Position = UDim2.new(0, 10, 1, -1)
+headerLine.BackgroundColor3 = Color3.fromRGB(255,255,255)
+headerLine.BackgroundTransparency = 0.7
+headerLine.BorderSizePixel = 0
+headerLine.Parent = header
+addThemeListener(function(c) headerLine.BackgroundColor3 = c end)
+
+local logoBox = Instance.new("Frame")
+logoBox.Size = UDim2.new(0, 32, 0, 32)
+logoBox.Position = UDim2.new(0, 12, 0.5, -16)
+logoBox.BackgroundColor3 = Color3.fromRGB(18,18,18)
+logoBox.BackgroundTransparency = 0.15
+logoBox.BorderSizePixel = 0
+logoBox.ZIndex = 3
+logoBox.Parent = header
+corner(logoBox, 6)
+local logoStroke = stroke(logoBox, 1.5, Color3.fromRGB(255,255,255), 0)
+logoStroke:SetAttribute("BaseT", 0)
+addThemeListener(function(c) logoStroke.Color = c end)
+
+local logoIcon = Instance.new("TextLabel")
+logoIcon.Size = UDim2.new(1,0,1,0)
+logoIcon.BackgroundTransparency = 1
+logoIcon.Text = "⚡"
+logoIcon.TextColor3 = Color3.fromRGB(255,255,255)
+logoIcon.Font = Enum.Font.GothamBold
+logoIcon.TextSize = 18
+logoIcon.ZIndex = 4
+logoIcon.Parent = logoBox
+addThemeListener(function(c) logoIcon.TextColor3 = c end)
+
+task.spawn(function()
+    while logoIcon.Parent do
+        local c = currentThemeColor
+        TweenService:Create(logoIcon, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {TextTransparency = 0.5}):Play()
+        task.wait(0.9)
+        TweenService:Create(logoIcon, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {TextTransparency = 0}):Play()
+        task.wait(0.9)
+    end
+end)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0, 200, 1, 0)
+title.Position = UDim2.new(0, 52, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "AuraMods"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 19
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
+
+local versionLabel = Instance.new("TextLabel")
+versionLabel.Size = UDim2.new(0, 120, 1, 0)
+versionLabel.Position = UDim2.new(1, -166, 0, 0)
+versionLabel.BackgroundTransparency = 1
+versionLabel.Text = VERSION .. "  •  Premium"
+versionLabel.TextColor3 = Color3.fromRGB(160,160,160)
+versionLabel.Font = Enum.Font.Gotham
+versionLabel.TextSize = 10
+versionLabel.TextXAlignment = Enum.TextXAlignment.Right
+versionLabel.Parent = header
+
+-- X kapatma butonu (sağ üst) — düzeltildi
+local closeBtn = Instance.new("TextButton")
+closeBtn.Name = "CloseButton"
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -38, 0.5, -13)
+closeBtn.AnchorPoint = Vector2.new(0, 0)
+closeBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+closeBtn.BorderSizePixel = 0
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.AutoButtonColor = false
+closeBtn.ZIndex = 50
+closeBtn.Parent = header
+corner(closeBtn, 4)
+local closeStroke = stroke(closeBtn, 1, Color3.fromRGB(120,120,120), 0.2)
+closeStroke:SetAttribute("BaseT", 0.2)
+
+closeBtn.MouseEnter:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.22, Enum.EasingStyle.Back), {BackgroundColor3 = Color3.fromRGB(210,40,40)}):Play()
+    TweenService:Create(closeBtn, TweenInfo.new(0.22, Enum.EasingStyle.Back), {Rotation = 90}):Play()
+    TweenService:Create(closeStroke, TweenInfo.new(0.22), {Transparency = 0}):Play()
+end)
+closeBtn.MouseLeave:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.22, Enum.EasingStyle.Back), {BackgroundColor3 = Color3.fromRGB(35,35,35)}):Play()
+    TweenService:Create(closeBtn, TweenInfo.new(0.22, Enum.EasingStyle.Back), {Rotation = 0}):Play()
+    TweenService:Create(closeStroke, TweenInfo.new(0.22), {Transparency = 0.2}):Play()
+end)
+
+-- ================== SIDEBAR ==================
+local sideBar = Instance.new("Frame")
+sideBar.Name = "SideBar"
+sideBar.Size = UDim2.new(0, 165, 1, -46)
+sideBar.Position = UDim2.new(0, 0, 0, 46)
+sideBar.BackgroundColor3 = Color3.fromRGB(8,8,8)
+sideBar.BackgroundTransparency = 0.45
+sideBar.BorderSizePixel = 0
+sideBar.Parent = main
+sideBar:SetAttribute("BaseBG", 0.45)
+
+-- ================== CONTENT ==================
+local contentPanel = Instance.new("Frame")
+contentPanel.Name = "ContentPanel"
+contentPanel.Size = UDim2.new(1, -165, 1, -46)
+contentPanel.Position = UDim2.new(0, 165, 0, 46)
+contentPanel.BackgroundTransparency = 1
+contentPanel.Parent = main
+
+local contentTitle = Instance.new("TextLabel")
+contentTitle.Size = UDim2.new(1, -24, 0, 26)
+contentTitle.Position = UDim2.new(0, 12, 0, 8)
+contentTitle.BackgroundTransparency = 1
+contentTitle.Text = ""
+contentTitle.TextColor3 = Color3.fromRGB(255,255,255)
+contentTitle.Font = Enum.Font.GothamBold
+contentTitle.TextSize = 14
+contentTitle.TextXAlignment = Enum.TextXAlignment.Left
+contentTitle.Parent = contentPanel
+addThemeListener(function(c) contentTitle.TextColor3 = c end)
+
+local contentScroll = Instance.new("ScrollingFrame")
+contentScroll.Size = UDim2.new(1, -24, 1, -46)
+contentScroll.Position = UDim2.new(0, 12, 0, 40)
+contentScroll.BackgroundTransparency = 1
+contentScroll.BorderSizePixel = 0
+contentScroll.ScrollBarThickness = 3
+contentScroll.ScrollBarImageColor3 = Color3.fromRGB(255,255,255)
+contentScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+contentScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+contentScroll.ScrollBarImageTransparency = 0.2
+contentScroll.Parent = contentPanel
+addThemeListener(function(c) contentScroll.ScrollBarImageColor3 = c end)
+
+-- ================== ESP SİSTEMİ ==================
+local drawings = {}
+local highlights = {}
+local espFolder = Instance.new("Folder")
+espFolder.Name = "AuraModsESP"
+espFolder.Parent = workspace
+
+local function isTeammate(plr)
+    local myTeam = player.Team
+    if not myTeam then return false end
+    return plr.Team == myTeam
+end
+
+local function isVisibleToCamera(plr, hrp)
+    local origin = camera.CFrame.Position
+    local dir = hrp.Position - origin
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    local filterList = {camera, espFolder}
+    if plr.Character then table.insert(filterList, plr.Character) end
+    if player.Character then table.insert(filterList, player.Character) end
+    params.FilterDescendantsInstances = filterList
+    local result = workspace:Raycast(origin, dir, params)
+    return result == nil
+end
+
+local function createDrawings()
+    if not hasDrawing then return nil end
+    local ok, d = pcall(function()
+        local box = Drawing.new("Square"); box.Visible=false; box.Thickness=1; box.Filled=false; box.Transparency=1; box.Color=COLOR_VISIBLE
+        local filledBox = Drawing.new("Square"); filledBox.Visible=false; filledBox.Thickness=0; filledBox.Filled=true; filledBox.Transparency=0.75; filledBox.Color=COLOR_VISIBLE
+        local corners = {}
+        for i=1,8 do
+            local line = Drawing.new("Line"); line.Visible=false; line.Thickness=2; line.Transparency=1; line.Color=COLOR_VISIBLE
+            corners[i]=line
+        end
+        local healthBg = Drawing.new("Square"); healthBg.Visible=false; healthBg.Thickness=0; healthBg.Filled=true; healthBg.Transparency=0.3; healthBg.Color=Color3.fromRGB(0,0,0)
+        local healthBar = Drawing.new("Square"); healthBar.Visible=false; healthBar.Thickness=0; healthBar.Filled=true; healthBar.Transparency=0.15; healthBar.Color=Color3.fromRGB(0,255,0)
+        local nm = Drawing.new("Text"); nm.Visible=false; nm.Size=14; nm.Center=true; nm.Outline=true; nm.OutlineColor=Color3.fromRGB(0,0,0); nm.Font=2; nm.Color=COLOR_VISIBLE
+        local dist = Drawing.new("Text"); dist.Visible=false; dist.Size=12; dist.Center=true; dist.Outline=true; dist.OutlineColor=Color3.fromRGB(0,0,0); dist.Font=2; dist.Color=COLOR_VISIBLE
+        local tracer = Drawing.new("Line"); tracer.Visible=false; tracer.Thickness=1; tracer.Transparency=1; tracer.Color=COLOR_VISIBLE
+        local headDot = Drawing.new("Circle"); headDot.Visible=false; headDot.Thickness=1; headDot.Filled=true; headDot.Radius=3; headDot.Color=COLOR_VISIBLE; headDot.Transparency=1
+        return {box=box, filledBox=filledBox, corners=corners, healthBg=healthBg, healthBar=healthBar, name=nm, dist=dist, tracer=tracer, headDot=headDot}
+    end)
+    if ok then return d end
+    return nil
+end
+
+local function clearDrawingsFor(plr)
+    local d = drawings[plr]
+    if d then
+        pcall(function()
+            d.box:Remove(); d.filledBox:Remove()
+            for _, l in pairs(d.corners) do l:Remove() end
+            d.healthBg:Remove(); d.healthBar:Remove(); d.name:Remove(); d.dist:Remove(); d.tracer:Remove(); d.headDot:Remove()
+        end)
+        drawings[plr] = nil
+    end
+end
+
+local function updateHighlight(plr, char, visible)
+    if ESP.body and char then
+        if not highlights[plr] then
+            local ok, h = pcall(function()
+                local hl = Instance.new("Highlight")
+                hl.Name = "AuraModsHL"
+                hl.FillTransparency = 0.7
+                hl.OutlineTransparency = 0
+                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                hl.Adornee = char
+                hl.Parent = espFolder
+                return hl
+            end)
+            if ok then highlights[plr] = h end
+        else
+            highlights[plr].Adornee = char
+        end
+        if highlights[plr] then
+            highlights[plr].Enabled = true
+            local col = visible and COLOR_VISIBLE or COLOR_HIDDEN
+            highlights[plr].FillColor = col
+            highlights[plr].OutlineColor = col
+        end
+    else
+        if highlights[plr] then highlights[plr].Enabled = false end
+    end
+end
+
+local function hideAllDrawings(d)
+    d.box.Visible = false; d.filledBox.Visible = false
+    for _, l in pairs(d.corners) do l.Visible = false end
+    d.healthBg.Visible = false; d.healthBar.Visible = false
+    d.name.Visible = false; d.dist.Visible = false; d.tracer.Visible = false; d.headDot.Visible = false
+end
+
+RunService.RenderStepped:Connect(function()
+    local anyOn = ESP.body or ESP.box or ESP.corner or ESP.filled or ESP.name or ESP.distance or ESP.tracers or ESP.health or ESP.headDot
+    if not anyOn then
+        for _, d in pairs(drawings) do pcall(hideAllDrawings, d) end
+        for _, h in pairs(highlights) do if h and h.Parent then h.Enabled = false end end
+        return
+    end
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr == player then continue end
+        local skip = ESP.teamCheck and isTeammate(plr)
+        local char = plr.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local head = char and char:FindFirstChild("Head")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local alive = hrp and head and hum and hum.Health > 0
+
+        if skip or not alive then
+            if drawings[plr] then pcall(hideAllDrawings, drawings[plr]) end
+            if highlights[plr] then highlights[plr].Enabled = false end
+            continue
+        end
+
+        local visible = true
+        if ESP.wallCheck then visible = isVisibleToCamera(plr, hrp) end
+        local col = visible and COLOR_VISIBLE or COLOR_HIDDEN
+
+        if ESP.body then updateHighlight(plr, char, visible)
+        else if highlights[plr] then highlights[plr].Enabled = false end end
+
+        if hasDrawing then
+            if not drawings[plr] then drawings[plr] = createDrawings() end
+            local d = drawings[plr]
+            if d then
+                local headPos, headOn = camera:WorldToViewportPoint(head.Position + Vector3.new(0,0.5,0))
+                local footPos, footOn = camera:WorldToViewportPoint(hrp.Position - Vector3.new(0,2.5,0))
+                if headOn and footOn and headPos.Z > 0 then
+                    local height = math.abs(headPos.Y - footPos.Y)
+                    local width = height * 0.6
+                    local bx = headPos.X - width/2
+                    local by = headPos.Y
+
+                    if ESP.box then
+                        d.box.Visible=true; d.box.Position=Vector2.new(bx,by); d.box.Size=Vector2.new(width,height); d.box.Color=col
+                    else d.box.Visible=false end
+
+                    if ESP.filled then
+                        d.filledBox.Visible=true; d.filledBox.Position=Vector2.new(bx,by); d.filledBox.Size=Vector2.new(width,height); d.filledBox.Color=col
+                    else d.filledBox.Visible=false end
+
+                    if ESP.corner then
+                        local cs = math.min(width,height)*0.25
+                        local pts = {
+                            {bx,by,bx+cs,by},{bx,by,bx,by+cs},
+                            {bx+width,by,bx+width-cs,by},{bx+width,by,bx+width,by+cs},
+                            {bx,by+height,bx+cs,by+height},{bx,by+height,bx,by+height-cs},
+                            {bx+width,by+height,bx+width-cs,by+height},{bx+width,by+height,bx+width,by+height-cs}
+                        }
+                        for i,l in ipairs(d.corners) do
+                            local p = pts[i]
+                            l.Visible=true; l.From=Vector2.new(p[1],p[2]); l.To=Vector2.new(p[3],p[4]); l.Color=col
+                        end
+                    else for _,l in pairs(d.corners) do l.Visible=false end end
+
+                    if ESP.health and hum then
+                        local hp = math.clamp(hum.Health/hum.MaxHealth, 0, 1)
+                        local hbX = bx - 6
+                        d.healthBg.Visible=true; d.healthBg.Position=Vector2.new(hbX,by); d.healthBg.Size=Vector2.new(3,height)
+                        d.healthBar.Visible=true; d.healthBar.Position=Vector2.new(hbX,by+height*(1-hp)); d.healthBar.Size=Vector2.new(3,height*hp)
+                        if hp > 0.6 then d.healthBar.Color = Color3.fromRGB(0,255,80)
+                        elseif hp > 0.3 then d.healthBar.Color = Color3.fromRGB(255,200,0)
+                        else d.healthBar.Color = Color3.fromRGB(255,40,40) end
+                    else d.healthBg.Visible=false; d.healthBar.Visible=false end
+
+                    if ESP.name then
+                        d.name.Visible=true; d.name.Position=Vector2.new(headPos.X,by-18); d.name.Text=plr.Name; d.name.Color=col
+                    else d.name.Visible=false end
+
+                    if ESP.distance then
+                        d.dist.Visible=true; d.dist.Position=Vector2.new(headPos.X,by+height+6)
+                        local dist = (camera.CFrame.Position - hrp.Position).Magnitude
+                        d.dist.Text = string.format("%d studs", math.floor(dist)); d.dist.Color=col
+                    else d.dist.Visible=false end
+
+                    if ESP.tracers then
+                        d.tracer.Visible=true; d.tracer.From=Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y); d.tracer.To=Vector2.new(headPos.X,headPos.Y); d.tracer.Color=col
+                    else d.tracer.Visible=false end
+
+                    if ESP.headDot then
+                        d.headDot.Visible=true; d.headDot.Position=Vector2.new(headPos.X,headPos.Y); d.headDot.Color=col
+                    else d.headDot.Visible=false end
+                else pcall(hideAllDrawings, d) end
+            end
+        end
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    clearDrawingsFor(plr)
+    if highlights[plr] then highlights[plr]:Destroy(); highlights[plr] = nil end
+end)
+
+-- ================== AIMBOT SİSTEMİ ==================
+local aimCircle
+local function createAimCircle()
+    if aimCircle then aimCircle:Remove() end
+    if not hasDrawing then return end
+    pcall(function()
+        aimCircle = Drawing.new("Circle")
+        aimCircle.Thickness = 1
+        aimCircle.NumSides = 60
+        aimCircle.Radius = AIM.fov
+        aimCircle.Filled = false
+        aimCircle.Color = Color3.fromRGB(255,255,255)
+        aimCircle.Transparency = 1
+        aimCircle.Visible = AIM.enabled
+    end)
+end
+createAimCircle()
+
+local function getClosestTarget()
+    local closest, closestDist = nil, math.huge
+    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr == player then continue end
+        if AIM.teamCheck and isTeammate(plr) then continue end
+        local char = plr.Character
+        local head = char and char:FindFirstChild("Head")
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if head and hrp and hum and hum.Health > 0 then
+            if AIM.visibleOnly and not isVisibleToCamera(plr, hrp) then continue end
+            local pos, onScreen = camera:WorldToViewportPoint(head.Position)
+            if onScreen and pos.Z > 0 then
+                local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                if dist < AIM.fov and dist < closestDist then
+                    closestDist = dist
+                    closest = head
+                end
+            end
+        end
+    end
+    return closest
+end
+
+RunService.RenderStepped:Connect(function()
+    if aimCircle then
+        aimCircle.Visible = AIM.enabled
+        aimCircle.Radius = AIM.fov
+        aimCircle.Color = currentThemeColor
+        pcall(function()
+            aimCircle.Position = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+        end)
+    end
+    if not AIM.enabled then return end
+    local shouldAim = true
+    if AIM.holdMode then shouldAim = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) end
+    if not shouldAim then return end
+    local target = getClosestTarget()
+    if not target then return end
+    local targetPos = target.Position
+    if AIM.prediction then
+        local char = target.Parent
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local vel = hrp.AssemblyLinearVelocity or hrp.Velocity
+            local ping = 0
+            pcall(function() ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()/1000 end)
+            targetPos = target.Position + vel * ping
+        end
+    end
+    local screenPos, onScreen = camera:WorldToViewportPoint(targetPos)
+    if not onScreen then return end
+    local center = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+    local delta = Vector2.new(screenPos.X, screenPos.Y) - center
+    local move = delta * AIM.smoothness
+    pcall(function()
+        local mover = mousemoverel or (syn and syn.mouse and syn.mouse.move) or (fluxus and fluxus.mousemoverel)
+        if mover then mover(move.X, move.Y) end
+    end)
+end)
+
+-- ================== FULLBRIGHT ==================
+local originalLighting = {
+    Brightness = Lighting.Brightness,
+    Ambient = Lighting.Ambient,
+    OutdoorAmbient = Lighting.OutdoorAmbient,
+    FogEnd = Lighting.FogEnd,
+    FogStart = Lighting.FogStart,
+    GlobalShadows = Lighting.GlobalShadows
+}
+
+local function applyFullbright()
+    if FULLBRIGHT then
+        Lighting.Brightness = 3
+        Lighting.Ambient = Color3.fromRGB(200,200,200)
+        Lighting.OutdoorAmbient = Color3.fromRGB(200,200,200)
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 100000
+        Lighting.FogStart = 100000
+    else
+        Lighting.Brightness = originalLighting.Brightness
+        Lighting.Ambient = originalLighting.Ambient
+        Lighting.OutdoorAmbient = originalLighting.OutdoorAmbient
+        Lighting.GlobalShadows = originalLighting.GlobalShadows
+        Lighting.FogEnd = originalLighting.FogEnd
+        Lighting.FogStart = originalLighting.FogStart
+    end
+end
+
+-- ================== POTATO MOD ==================
+local potatoSaved = {
+    textures = {},
+    lighting = {
+        Brightness = nil, Ambient = nil, OutdoorAmbient = nil,
+        FogEnd = nil, FogStart = nil, GlobalShadows = nil,
+        EnvironmentDiffuseScale = nil, EnvironmentSpecularScale = nil,
+        Technology = nil
+    },
+    sky = nil,
+    atmosphere = nil,
+    postEffects = {}
+}
+
+local function enablePotatoMode()
+    -- Lighting kaydet
+    potatoSaved.lighting.Brightness = Lighting.Brightness
+    potatoSaved.lighting.Ambient = Lighting.Ambient
+    potatoSaved.lighting.OutdoorAmbient = Lighting.OutdoorAmbient
+    potatoSaved.lighting.FogEnd = Lighting.FogEnd
+    potatoSaved.lighting.FogStart = Lighting.FogStart
+    potatoSaved.lighting.GlobalShadows = Lighting.GlobalShadows
+    potatoSaved.lighting.EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale
+    potatoSaved.lighting.EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale
+    pcall(function() potatoSaved.lighting.Technology = Lighting.Technology end)
+
+    -- Sky ve Atmosphere kaydet
+    for _, v in ipairs(Lighting:GetChildren()) do
+        if v:IsA("Sky") then
+            potatoSaved.sky = v
+            v.Parent = nil
+        elseif v:IsA("Atmosphere") then
+            potatoSaved.atmosphere = v
+            v.Parent = nil
+        elseif v:IsA("PostEffect") or v:IsA("BloomEffect") or v:IsA("BlurEffect")
+            or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") or v:IsA("DepthOfFieldEffect") then
+            if v.Enabled then
+                table.insert(potatoSaved.postEffects, v)
+                v.Enabled = false
+            end
+        end
+    end
+
+    -- Doku temizleme (workspace)
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Decal") or obj:IsA("Texture") then
+            potatoSaved.textures[obj] = obj.Texture
+            obj.Texture = ""
+        elseif obj:IsA("SurfaceAppearance") then
+            potatoSaved.textures[obj] = obj.Parent
+            obj.Parent = nil
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+            if obj.Enabled then
+                obj.Enabled = false
+                table.insert(potatoSaved.postEffects, obj)
+            end
+        end
+    end
+
+    -- Terrain
+    pcall(function()
+        if workspace.Terrain then
+            workspace.Terrain.WaterWaveSize = 0
+            workspace.Terrain.WaterWaveSpeed = 0
+            workspace.Terrain.WaterReflectance = 0
+            workspace.Terrain.WaterTransparency = 1
+            workspace.Terrain.Decoration = false
+        end
+    end)
+
+    -- Lighting ayarları
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 1e9
+    Lighting.FogStart = 1e9
+    Lighting.Brightness = 3
+    Lighting.Ambient = Color3.fromRGB(210,210,210)
+    Lighting.OutdoorAmbient = Color3.fromRGB(210,210,210)
+    Lighting.EnvironmentDiffuseScale = 0
+    Lighting.EnvironmentSpecularScale = 0
+end
+
+local function disablePotatoMode()
+    -- Dokuları geri yükle
+    for obj, tex in pairs(potatoSaved.textures) do
+        pcall(function()
+            if typeof(tex) == "Instance" then
+                tex.Parent = obj
+            else
+                obj.Texture = tex
+            end
+        end)
+    end
+    potatoSaved.textures = {}
+
+    -- Emitter/effect geri aç
+    for _, v in ipairs(potatoSaved.postEffects) do
+        pcall(function() v.Enabled = true end)
+    end
+    potatoSaved.postEffects = {}
+
+    -- Sky / Atmosphere geri
+    if potatoSaved.sky then pcall(function() potatoSaved.sky.Parent = Lighting end) end
+    if potatoSaved.atmosphere then pcall(function() potatoSaved.atmosphere.Parent = Lighting end) end
+    potatoSaved.sky = nil
+    potatoSaved.atmosphere = nil
+
+    -- Lighting geri
+    local L = potatoSaved.lighting
+    if L.Brightness then Lighting.Brightness = L.Brightness end
+    if L.Ambient then Lighting.Ambient = L.Ambient end
+    if L.OutdoorAmbient then Lighting.OutdoorAmbient = L.OutdoorAmbient end
+    if L.FogEnd then Lighting.FogEnd = L.FogEnd end
+    if L.FogStart then Lighting.FogStart = L.FogStart end
+    if L.GlobalShadows ~= nil then Lighting.GlobalShadows = L.GlobalShadows end
+    if L.EnvironmentDiffuseScale then Lighting.EnvironmentDiffuseScale = L.EnvironmentDiffuseScale end
+    if L.EnvironmentSpecularScale then Lighting.EnvironmentSpecularScale = L.EnvironmentSpecularScale end
+
+    applyFullbright()
+end
+
+-- ================== PLAYER SİSTEMİ ==================
+local flyBodyVel, flyBodyGyro
+
+local function getChar() return player.Character end
+local function getHum() local c = getChar(); return c and c:FindFirstChildOfClass("Humanoid") end
+local function getHRP() local c = getChar(); return c and c:FindFirstChild("HumanoidRootPart") end
+
+local function applyWalkSpeed()
+    local h = getHum()
+    if h then h.WalkSpeed = PLAYER.walkSpeed end
+end
+local function applyJumpPower()
+    local h = getHum()
+    if h then h.UseJumpPower = true; h.JumpPower = PLAYER.jumpPower end
+end
+local function applyHipHeight()
+    local h = getHum()
+    if h then h.HipHeight = PLAYER.hipHeight end
+end
+
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    applyWalkSpeed(); applyJumpPower(); applyHipHeight()
+end)
+
+local function startFly()
+    local hrp = getHRP()
+    if not hrp then return end
+    if flyBodyVel then flyBodyVel:Destroy() end
+    if flyBodyGyro then flyBodyGyro:Destroy() end
+    flyBodyVel = Instance.new("BodyVelocity")
+    flyBodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    flyBodyVel.Velocity = Vector3.new(0,0,0)
+    flyBodyVel.Parent = hrp
+    flyBodyGyro = Instance.new("BodyGyro")
+    flyBodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    flyBodyGyro.P = 1000
+    flyBodyGyro.CFrame = hrp.CFrame
+    flyBodyGyro.Parent = hrp
+end
+
+local function stopFly()
+    if flyBodyVel then flyBodyVel:Destroy(); flyBodyVel = nil end
+    if flyBodyGyro then flyBodyGyro:Destroy(); flyBodyGyro = nil end
+end
+
+RunService.RenderStepped:Connect(function()
+    if not PLAYER.fly then return end
+    local hrp = getHRP()
+    if not hrp then return end
+    if not flyBodyVel or flyBodyVel.Parent ~= hrp then startFly() end
+    if not flyBodyVel then return end
+    local move = Vector3.new(0,0,0)
+    local camCF = camera.CFrame
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + camCF.LookVector end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - camCF.LookVector end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - camCF.RightVector end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + camCF.RightVector end
+    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0,1,0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - Vector3.new(0,1,0) end
+    if move.Magnitude > 0 then move = move.Unit end
+    flyBodyVel.Velocity = move * PLAYER.flySpeed
+    flyBodyGyro.CFrame = camCF
+end)
+
+RunService.Stepped:Connect(function()
+    if not PLAYER.noclip then return end
+    local c = getChar()
+    if not c then return end
+    for _, part in ipairs(c:GetDescendants()) do
+        if part:IsA("BasePart") then part.CanCollide = false end
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if not PLAYER.infJump then return end
+    local h = getHum()
+    if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    if not PLAYER.clickTP then return end
+    local mouse = player:GetMouse()
+    if mouse and mouse.Hit then
+        local hrp = getHRP()
+        if hrp then hrp.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0,3,0)) end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if not PLAYER.godMode then return end
+    local h = getHum()
+    if h and h.Health > 0 then h.Health = h.MaxHealth end
+end)
+
+-- ================== UI ROW BUILDERS ==================
+local currentY = 0
+local langLabels = {}
+
+local function regLabel(lbl, key, prefix, suffix)
+    prefix = prefix or ""
+    suffix = suffix or ""
+    table.insert(langLabels, {label = lbl, key = key, prefix = prefix, suffix = suffix})
+    lbl.Text = prefix .. T(key) .. suffix
+end
+
+local function refreshLabels()
+    for i = #langLabels, 1, -1 do
+        local entry = langLabels[i]
+        if entry.label and entry.label.Parent then
+            entry.label.Text = (entry.prefix or "") .. T(entry.key) .. (entry.suffix or "")
+        else
+            table.remove(langLabels, i)
+        end
+    end
+end
+
+-- Grup başlığı
+local function makeGroupHeader(parent, labelKey)
+    local hdr = Instance.new("TextLabel")
+    hdr.Size = UDim2.new(1, -8, 0, 22)
+    hdr.Position = UDim2.new(0, 4, 0, currentY)
+    hdr.BackgroundTransparency = 1
+    hdr.TextColor3 = Color3.fromRGB(140,140,140)
+    hdr.Font = Enum.Font.GothamBold
+    hdr.TextSize = 11
+    hdr.TextXAlignment = Enum.TextXAlignment.Left
+    hdr.Parent = parent
+    regLabel(hdr, labelKey, "— ", " —")
+    addThemeListener(function(c) hdr.TextColor3 = c:Lerp(Color3.fromRGB(140,140,140), 0.5) end)
+    currentY = currentY + 26
+end
+
+-- Toggle satırı
+local function makeToggleRow(parent, labelKey, default, callback)
+    local state = default
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -8, 0, 30)
+    row.Position = UDim2.new(0, 0, 0, currentY)
+    row.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    row.BackgroundTransparency = 0.4
+    row.BorderSizePixel = 0
+    row.Parent = parent
+    local rs = stroke(row, 1, Color3.fromRGB(255,255,255), 0.6)
+    currentY = currentY + 34
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -70, 1, 0)
+    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(230,230,230)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 12
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+    regLabel(lbl, labelKey)
+
+    local sw = Instance.new("Frame")
+    sw.Size = UDim2.new(0, 40, 0, 20)
+    sw.Position = UDim2.new(1, -52, 0.5, -10)
+    sw.BackgroundColor3 = state and currentThemeColor or Color3.fromRGB(60,60,60)
+    sw.BorderSizePixel = 0
+    sw.Parent = row
+    corner(sw, 10)
+    addThemeListener(function(c)
+        if state then sw.BackgroundColor3 = c end
+    end)
+
+    local xMark = Instance.new("TextLabel")
+    xMark.Size = UDim2.new(0, 16, 0, 16)
+    xMark.Position = UDim2.new(0, 2, 0.5, -8)
+    xMark.BackgroundTransparency = 1
+    xMark.Text = "✕"
+    xMark.TextColor3 = Color3.fromRGB(200,200,200)
+    xMark.Font = Enum.Font.GothamBold
+    xMark.TextSize = 10
+    xMark.ZIndex = 1
+    xMark.Parent = sw
+
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.new(0, 16, 0, 16)
+    dot.Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+    dot.BackgroundColor3 = state and Color3.fromRGB(0,0,0) or Color3.fromRGB(200,200,200)
+    dot.BorderSizePixel = 0
+    dot.ZIndex = 2
+    dot.Parent = sw
+    corner(dot, 8)
+
+    local clickArea = Instance.new("TextButton")
+    clickArea.Size = UDim2.new(1, 0, 1, 0)
+    clickArea.BackgroundTransparency = 1
+    clickArea.Text = ""
+    clickArea.AutoButtonColor = false
+    clickArea.ZIndex = 3
+    clickArea.Parent = row
+
+    clickArea.MouseButton1Down:Connect(function()
+        state = not state
+        TweenService:Create(sw, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = state and currentThemeColor or Color3.fromRGB(60,60,60)
+        }):Play()
+        TweenService:Create(dot, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
+            BackgroundColor3 = state and Color3.fromRGB(0,0,0) or Color3.fromRGB(200,200,200)
+        }):Play()
+        if callback then pcall(callback, state) end
+    end)
+
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {BackgroundTransparency = 0.15}):Play()
+        TweenService:Create(rs, TweenInfo.new(0.15), {Transparency = 0.2}):Play()
+    end)
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {BackgroundTransparency = 0.4}):Play()
+        TweenService:Create(rs, TweenInfo.new(0.15), {Transparency = 0.6}):Play()
+    end)
+    return row
+end
+
+-- Input satırı (boş kutu, kullanıcı değer girer)
+local function makeInputRow(parent, labelKey, currentValue, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -8, 0, 30)
+    row.Position = UDim2.new(0, 0, 0, currentY)
+    row.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    row.BackgroundTransparency = 0.4
+    row.BorderSizePixel = 0
+    row.Parent = parent
+    local rs = stroke(row, 1, Color3.fromRGB(255,255,255), 0.6)
+    currentY = currentY + 34
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -110, 1, 0)
+    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(230,230,230)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 12
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+    regLabel(lbl, labelKey)
+
+    local input = Instance.new("TextBox")
+    input.Size = UDim2.new(0, 80, 0, 22)
+    input.Position = UDim2.new(1, -92, 0.5, -11)
+    input.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    input.BorderSizePixel = 0
+    input.Text = ""
+    input.PlaceholderText = tostring(currentValue)
+    input.PlaceholderColor3 = Color3.fromRGB(150,150,150)
+    input.TextColor3 = Color3.fromRGB(255,255,255)
+    input.Font = Enum.Font.Gotham
+    input.TextSize = 12
+    input.ClearTextOnFocus = false
+    input.Parent = row
+    corner(input, 3)
+    local is = stroke(input, 1, Color3.fromRGB(255,255,255), 0.5)
+
+    local function applyValue()
+        local v = tonumber(input.Text)
+        if v then
+            if callback then pcall(callback, v) end
+            input.Text = ""
+        end
+    end
+
+    input.FocusLost:Connect(function(enterPressed)
+        if enterPressed then applyValue() end
+    end)
+
+    input.Focused:Connect(function()
+        TweenService:Create(is, TweenInfo.new(0.15), {Transparency = 0, Color = currentThemeColor}):Play()
+    end)
+    input.FocusLost:Connect(function()
+        TweenService:Create(is, TweenInfo.new(0.15), {Transparency = 0.5, Color = Color3.fromRGB(255,255,255)}):Play()
+    end)
+
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {BackgroundTransparency = 0.15}):Play()
+        TweenService:Create(rs, TweenInfo.new(0.15), {Transparency = 0.2}):Play()
+    end)
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {BackgroundTransparency = 0.4}):Play()
+        TweenService:Create(rs, TweenInfo.new(0.15), {Transparency = 0.6}):Play()
+    end)
+    return row
+end
+
+-- Buton satırı (input + buton)
+local function makeButtonRow(parent, labelKey, btnKey, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -8, 0, 30)
+    row.Position = UDim2.new(0, 0, 0, currentY)
+    row.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    row.BackgroundTransparency = 0.4
+    row.BorderSizePixel = 0
+    row.Parent = parent
+    local rs = stroke(row, 1, Color3.fromRGB(255,255,255), 0.6)
+    currentY = currentY + 34
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -160, 1, 0)
+    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(230,230,230)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 12
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+    regLabel(lbl, labelKey)
+
+    local playerInput = Instance.new("TextBox")
+    playerInput.Size = UDim2.new(0, 80, 0, 22)
+    playerInput.Position = UDim2.new(1, -132, 0.5, -11)
+    playerInput.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    playerInput.BorderSizePixel = 0
+    playerInput.Text = ""
+    playerInput.PlaceholderText = "..."
+    playerInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
+    playerInput.TextColor3 = Color3.fromRGB(255,255,255)
+    playerInput.Font = Enum.Font.Gotham
+    playerInput.TextSize = 11
+    playerInput.Parent = row
+    corner(playerInput, 3)
+    local is = stroke(playerInput, 1, Color3.fromRGB(255,255,255), 0.5)
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 44, 0, 22)
+    btn.Position = UDim2.new(1, -48, 0.5, -11)
+    btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
+    btn.BorderSizePixel = 0
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 10
+    btn.AutoButtonColor = false
+    btn.Parent = row
+    regLabel(btn, btnKey)
+    corner(btn, 3)
+    local bs = stroke(btn, 1, Color3.fromRGB(255,255,255), 0.4)
+    addThemeListener(function(c) btn.TextColor3 = c end)
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(90,90,90)}):Play()
+        TweenService:Create(bs, TweenInfo.new(0.15), {Transparency = 0}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(45,45,45)}):Play()
+        TweenService:Create(bs, TweenInfo.new(0.15), {Transparency = 0.4}):Play()
+    end)
+    btn.MouseButton1Click:Connect(function()
+        if callback then pcall(callback, playerInput.Text) end
+    end)
+
+    return row
+end
+
+-- Aksiyon satırı (sadece buton)
+local function makeActionRow(parent, labelKey, defaultColor, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -8, 0, 34)
+    row.Position = UDim2.new(0, 0, 0, currentY)
+    row.BackgroundColor3 = defaultColor or Color3.fromRGB(18,18,18)
+    row.BackgroundTransparency = 0.3
+    row.BorderSizePixel = 0
+    row.Parent = parent
+    local rs = stroke(row, 1, Color3.fromRGB(255,80,80), 0.4)
+    currentY = currentY + 40
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -20, 1, 0)
+    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(255,220,220)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = row
+    regLabel(lbl, labelKey)
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    btn.AutoButtonColor = false
+    btn.ZIndex = 3
+    btn.Parent = row
+
+    btn.MouseButton1Click:Connect(function()
+        if callback then pcall(callback) end
+    end)
+
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {BackgroundTransparency = 0.1}):Play()
+        TweenService:Create(rs, TweenInfo.new(0.15), {Transparency = 0}):Play()
+    end)
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+        TweenService:Create(rs, TweenInfo.new(0.15), {Transparency = 0.4}):Play()
+    end)
+    return row
+end
+
+-- Tema butonu satırı
+local function makeThemeRow(parent)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -8, 0, 34)
+    row.Position = UDim2.new(0, 0, 0, currentY)
+    row.BackgroundTransparency = 1
+    row.Parent = parent
+    currentY = currentY + 40
+
+    local themeButtons = {}
+    local btnW = 66
+    local gap = 5
+
+    for i, theme in ipairs(THEMES) do
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0, btnW, 0, 26)
+        b.Position = UDim2.new(0, (i-1) * (btnW + gap), 0, 4)
+        b.BackgroundColor3 = (currentThemeIndex == i) and Color3.fromRGB(80,80,80) or Color3.fromRGB(25,25,25)
+        b.BorderSizePixel = 0
+        b.TextColor3 = Color3.fromRGB(255,255,255)
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 10
+        b.AutoButtonColor = false
+        b.Parent = row
+        corner(b, 3)
+        local bs = stroke(b, 1, theme.color, 0.3)
+        regLabel(b, theme.key)
+
+        -- Renk noktası
+        local dot = Instance.new("Frame")
+        dot.Size = UDim2.new(0, 8, 0, 8)
+        dot.Position = UDim2.new(0, 6, 0.5, -4)
+        dot.BackgroundColor3 = theme.color
+        dot.BorderSizePixel = 0
+        dot.Parent = b
+        corner(dot, 4)
+
+        themeButtons[i] = {btn = b, stroke = bs}
+
+        b.MouseButton1Click:Connect(function()
+            currentThemeIndex = i
+            currentThemeColor = theme.color
+            for j, other in ipairs(themeButtons) do
+                other.btn.BackgroundColor3 = (j == i) and Color3.fromRGB(80,80,80) or Color3.fromRGB(25,25,25)
+            end
+            for _, fn in ipairs(themeListeners) do
+                pcall(fn, currentThemeColor)
+            end
+        end)
+
+        b.MouseEnter:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(120,120,120)}):Play()
+            TweenService:Create(bs, TweenInfo.new(0.15), {Transparency = 0}):Play()
+        end)
+        b.MouseLeave:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = (currentThemeIndex == i) and Color3.fromRGB(80,80,80) or Color3.fromRGB(25,25,25)}):Play()
+            TweenService:Create(bs, TweenInfo.new(0.15), {Transparency = 0.3}):Play()
+        end)
+    end
+    -- İkinci satıra geç
+    currentY = currentY + 0
+end
+
+-- Dil butonu satırı
+local function makeLanguageRow(parent)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -8, 0, 34)
+    row.Position = UDim2.new(0, 0, 0, currentY)
+    row.BackgroundTransparency = 1
+    row.Parent = parent
+    currentY = currentY + 40
+
+    local languages = {
+        {code="en", label="English"},
+        {code="tr", label="Türkçe"},
+        {code="ru", label="Русский"}
+    }
+    local langButtons = {}
+    local btnW = 118
+    local gap = 6
+
+    for i, l in ipairs(languages) do
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0, btnW, 0, 26)
+        b.Position = UDim2.new(0, (i-1) * (btnW + gap), 0, 4)
+        b.BackgroundColor3 = (currentLang == l.code) and Color3.fromRGB(80,80,80) or Color3.fromRGB(25,25,25)
+        b.BorderSizePixel = 0
+        b.Text = l.label
+        b.TextColor3 = Color3.fromRGB(255,255,255)
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 11
+        b.AutoButtonColor = false
+        b.Parent = row
+        corner(b, 3)
+        local bs = stroke(b, 1, Color3.fromRGB(255,255,255), 0.4)
+
+        langButtons[i] = {btn = b, stroke = bs}
+
+        b.MouseButton1Click:Connect(function()
+            currentLang = l.code
+            for j, other in ipairs(langButtons) do
+                other.btn.BackgroundColor3 = (j == i) and Color3.fromRGB(80,80,80) or Color3.fromRGB(25,25,25)
+            end
+            refreshLabels()
+            -- Sidebar ve başlık metinlerini de güncelle
+            for _, cb in ipairs(catButtons) do
+                cb.updateText()
+            end
+            if currentCategoryIndex then
+                loadCategory(currentCategoryIndex)
+            end
+        end)
+
+        b.MouseEnter:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(120,120,120)}):Play()
+            TweenService:Create(bs, TweenInfo.new(0.15), {Transparency = 0}):Play()
+        end)
+        b.MouseLeave:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = (currentLang == l.code) and Color3.fromRGB(80,80,80) or Color3.fromRGB(25,25,25)}):Play()
+            TweenService:Create(bs, TweenInfo.new(0.15), {Transparency = 0.4}):Play()
+        end)
+    end
+end
+
+-- ================== KATEGORİLER ==================
+local categories = {
+    -- ESP
+    {
+        nameKey = "esp", icon = "👁",
+        build = function(parent)
+            currentY = 0
+            makeGroupHeader(parent, "group_visuals")
+            makeToggleRow(parent, "body", ESP.body, function(v) ESP.body = v end)
+            makeToggleRow(parent, "box", ESP.box, function(v) ESP.box = v end)
+            makeToggleRow(parent, "corner", ESP.corner, function(v) ESP.corner = v end)
+            makeToggleRow(parent, "filled", ESP.filled, function(v) ESP.filled = v end)
+            makeGroupHeader(parent, "group_info")
+            makeToggleRow(parent, "name", ESP.name, function(v) ESP.name = v end)
+            makeToggleRow(parent, "distance", ESP.distance, function(v) ESP.distance = v end)
+            makeToggleRow(parent, "health", ESP.health, function(v) ESP.health = v end)
+            makeToggleRow(parent, "headdot", ESP.headDot, function(v) ESP.headDot = v end)
+            makeGroupHeader(parent, "group_extra")
+            makeToggleRow(parent, "tracers", ESP.tracers, function(v) ESP.tracers = v end)
+            makeToggleRow(parent, "wall", ESP.wallCheck, function(v) ESP.wallCheck = v end)
+            makeToggleRow(parent, "team", ESP.teamCheck, function(v) ESP.teamCheck = v end)
+        end
+    },
+    -- Aimbot
+    {
+        nameKey = "aimbot", icon = "🎯",
+        build = function(parent)
+            currentY = 0
+            makeGroupHeader(parent, "group_general")
+            makeToggleRow(parent, "enable_aim", AIM.enabled, function(v) AIM.enabled = v end)
+            makeToggleRow(parent, "hold_mode", AIM.holdMode, function(v) AIM.holdMode = v end)
+            makeGroupHeader(parent, "group_checks")
+            makeToggleRow(parent, "team", AIM.teamCheck, function(v) AIM.teamCheck = v end)
+            makeToggleRow(parent, "wall", AIM.wallCheck, function(v) AIM.wallCheck = v end)
+            makeToggleRow(parent, "visible_only", AIM.visibleOnly, function(v) AIM.visibleOnly = v end)
+            makeToggleRow(parent, "prediction", AIM.prediction, function(v) AIM.prediction = v end)
+            makeGroupHeader(parent, "group_aimcfg")
+            makeInputRow(parent, "fov", AIM.fov, function(v) AIM.fov = v end)
+            makeInputRow(parent, "smoothness", AIM.smoothness, function(v) AIM.smoothness = v end)
+        end
+    },
+    -- Player
+    {
+        nameKey = "player_cat", icon = "🧍",
+        build = function(parent)
+            currentY = 0
+            makeGroupHeader(parent, "group_movement")
+            makeInputRow(parent, "walk_speed", PLAYER.walkSpeed, function(v) PLAYER.walkSpeed = v; applyWalkSpeed() end)
+            makeInputRow(parent, "jump_power", PLAYER.jumpPower, function(v) PLAYER.jumpPower = v; applyJumpPower() end)
+            makeInputRow(parent, "hip_height", PLAYER.hipHeight, function(v) PLAYER.hipHeight = v; applyHipHeight() end)
+            makeGroupHeader(parent, "group_flight")
+            makeToggleRow(parent, "fly", PLAYER.fly, function(v)
+                PLAYER.fly = v
+                if v then startFly() else stopFly() end
+            end)
+            makeInputRow(parent, "fly_speed", PLAYER.flySpeed, function(v) PLAYER.flySpeed = v end)
+            makeGroupHeader(parent, "group_exploits")
+            makeToggleRow(parent, "noclip", PLAYER.noclip, function(v) PLAYER.noclip = v end)
+            makeToggleRow(parent, "inf_jump", PLAYER.infJump, function(v) PLAYER.infJump = v end)
+            makeToggleRow(parent, "click_tp", PLAYER.clickTP, function(v) PLAYER.clickTP = v end)
+            makeToggleRow(parent, "god_mode", PLAYER.godMode, function(v) PLAYER.godMode = v end)
+            makeGroupHeader(parent, "group_teleport")
+            makeButtonRow(parent, "tp_player", "tp_btn", function(name)
+                name = (name or ""):gsub("%s+", "")
+                if name == "" then return end
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr ~= player and plr.Name:lower():sub(1, #name) == name:lower() then
+                        local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                        local myHrp = getHRP()
+                        if hrp and myHrp then myHrp.CFrame = hrp.CFrame + Vector3.new(0, 3, 0) end
+                        break
+                    end
+                end
+            end)
+        end
+    },
+    -- Settings
+    {
+        nameKey = "settings", icon = "⚙",
+        build = function(parent)
+            currentY = 0
+            makeGroupHeader(parent, "group_appearance")
+            local themeTitle = Instance.new("TextLabel")
+            themeTitle.Size = UDim2.new(1, -8, 0, 20)
+            themeTitle.Position = UDim2.new(0, 4, 0, currentY)
+            themeTitle.BackgroundTransparency = 1
+            themeTitle.TextColor3 = Color3.fromRGB(200,200,200)
+            themeTitle.Font = Enum.Font.GothamBold
+            themeTitle.TextSize = 11
+            themeTitle.TextXAlignment = Enum.TextXAlignment.Left
+            themeTitle.Parent = parent
+            regLabel(themeTitle, "theme")
+            currentY = currentY + 24
+            makeThemeRow(parent)
+
+            makeGroupHeader(parent, "group_performance")
+            makeToggleRow(parent, "fullbright", FULLBRIGHT, function(v)
+                FULLBRIGHT = v; applyFullbright()
+            end)
+            makeToggleRow(parent, "potato", POTATO, function(v)
+                POTATO = v
+                if v then enablePotatoMode() else disablePotatoMode() end
+            end)
+
+            makeGroupHeader(parent, "group_language")
+            makeLanguageRow(parent)
+
+            makeGroupHeader(parent, "group_danger")
+            makeActionRow(parent, "reset", Color3.fromRGB(60,20,20), function()
+                gui:Destroy()
+            end)
+        end
+    }
+}
+
+local currentCategoryIndex = nil
+local catButtons = {}
+
+local function clearContent()
+    for _, c in ipairs(contentScroll:GetChildren()) do c:Destroy() end
+    currentY = 0
+    -- Ölü label referanslarını temizle
+    for i = #langLabels, 1, -1 do
+        local entry = langLabels[i]
+        if not entry.label or not entry.label.Parent then
+            table.remove(langLabels, i)
+        end
+    end
+end
+
+local function loadCategory(index)
+    currentCategoryIndex = index
+    clearContent()
+    local cat = categories[index]
+    contentTitle.Text = cat.icon .. "  " .. T(cat.nameKey)
+    cat.build(contentScroll)
+    -- Satır animasyonları
+    local delay = 0
+    for _, c in ipairs(contentScroll:GetChildren()) do
+        local targetY = c.Position.Y.Offset
+        c.BackgroundTransparency = 1
+        c.Position = UDim2.new(c.Position.X.Scale, c.Position.X.Offset, c.Position.Y.Scale, targetY + 12)
+        local baseBG = 0.4
+        if c.BackgroundColor3.R > 0.15 and c.BackgroundColor3.G < 0.15 then baseBG = 0.3 end
+        TweenService:Create(c, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = baseBG,
+            Position = UDim2.new(c.Position.X.Scale, c.Position.X.Offset, c.Position.Y.Scale, targetY)
+        }):Play()
+        for _, d in ipairs(c:GetDescendants()) do
+            if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+                d.TextTransparency = 1
+                TweenService:Create(d, TweenInfo.new(0.28), {TextTransparency = 0}):Play()
+            end
+        end
+    end
+end
+
+-- Sidebar butonları
+for i, cat in ipairs(categories) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -16, 0, 40)
+    btn.Position = UDim2.new(0, 8, 0, 8 + (i-1) * 44)
+    btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    btn.BackgroundTransparency = 0.4
+    btn.BorderSizePixel = 0
+    btn.TextColor3 = Color3.fromRGB(200,200,200)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.AutoButtonColor = false
+    btn.Parent = sideBar
+    corner(btn, 4)
+
+    local function updateText()
+        btn.Text = "  " .. cat.icon .. "   " .. T(cat.nameKey)
+    end
+    updateText()
+
+    local bs = stroke(btn, 1, Color3.fromRGB(255,255,255), 0.6)
+    bs:SetAttribute("BaseT", 0.6)
+
+    catButtons[i] = {
+        btn = btn,
+        stroke = bs,
+        active = false,
+        cat = cat,
+        updateText = updateText
+    }
+
+    btn.MouseEnter:Connect(function()
+        if catButtons[i].active then return end
+        TweenService:Create(btn, TweenInfo.new(0.18), {BackgroundTransparency = 0.1, BackgroundColor3 = Color3.fromRGB(45,45,45), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+        TweenService:Create(bs, TweenInfo.new(0.18), {Transparency = 0.15}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        if catButtons[i].active then return end
+        TweenService:Create(btn, TweenInfo.new(0.18), {BackgroundTransparency = 0.4, BackgroundColor3 = Color3.fromRGB(20,20,20), TextColor3 = Color3.fromRGB(200,200,200)}):Play()
+        TweenService:Create(bs, TweenInfo.new(0.18), {Transparency = 0.6}):Play()
+    end)
+    btn.MouseButton1Click:Connect(function()
+        for j, other in ipairs(catButtons) do
+            if other.active then
+                other.active = false
+                TweenService:Create(other.btn, TweenInfo.new(0.18), {BackgroundTransparency = 0.4, BackgroundColor3 = Color3.fromRGB(20,20,20), TextColor3 = Color3.fromRGB(200,200,200)}):Play()
+                TweenService:Create(other.stroke, TweenInfo.new(0.18), {Transparency = 0.6}):Play()
+            end
+        end
+        catButtons[i].active = true
+        TweenService:Create(btn, TweenInfo.new(0.18), {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(60,60,60), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+        TweenService:Create(bs, TweenInfo.new(0.18), {Transparency = 0}):Play()
+        loadCategory(i)
+    end)
+end
+
+catButtons[1].active = true
+TweenService:Create(catButtons[1].btn, TweenInfo.new(0.18), {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(60,60,60), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+TweenService:Create(catButtons[1].stroke, TweenInfo.new(0.18), {Transparency = 0}):Play()
+loadCategory(1)
+
+-- ================== STATUS BAR ==================
+local statusBar = Instance.new("Frame")
+statusBar.Name = "StatusBar"
+statusBar.AnchorPoint = Vector2.new(0.5, 0)
+local statusPos = UDim2.new(0.5, 0, 0, 22)
+statusBar.Position = statusPos
+statusBar.BackgroundColor3 = Color3.fromRGB(0,0,0)
+statusBar.BackgroundTransparency = 0.3
+statusBar.BorderSizePixel = 0
+statusBar.Visible = false
+statusBar.Active = false
+statusBar.Size = UDim2.new(0, 400, 0, 30)
+statusBar.Parent = gui
+statusBar:SetAttribute("BaseBG", 0.3)
+statusBar:SetAttribute("TargetPos", statusPos)
+corner(statusBar, 5)
+local statusStroke = stroke(statusBar, 1.5, Color3.fromRGB(255,255,255), 0)
+statusStroke:SetAttribute("BaseT", 0)
+addThemeListener(function(c) statusStroke.Color = c end)
+
+-- Sürükleme tutamacı
+local dragHandle = Instance.new("Frame")
+dragHandle.Size = UDim2.new(0, 30, 1, 0)
+dragHandle.BackgroundTransparency = 1
+dragHandle.Active = true
+dragHandle.Parent = statusBar
+
+local dragIcon = Instance.new("TextLabel")
+dragIcon.Size = UDim2.new(1,0,1,0)
+dragIcon.BackgroundTransparency = 1
+dragIcon.Text = "≡"
+dragIcon.TextColor3 = Color3.fromRGB(255,255,255)
+dragIcon.Font = Enum.Font.GothamBold
+dragIcon.TextSize = 16
+dragIcon.Parent = dragHandle
+addThemeListener(function(c) dragIcon.TextColor3 = c end)
+
+-- Açma butonu (status bar'ın tutamaç dışındaki kısmı)
+local openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.new(1, -30, 1, 0)
+openBtn.Position = UDim2.new(0, 30, 0, 0)
+openBtn.BackgroundTransparency = 1
+openBtn.Text = ""
+openBtn.AutoButtonColor = false
+openBtn.Active = true
+openBtn.ZIndex = 5
+openBtn.Parent = statusBar
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -12, 1, 0)
+statusLabel.Position = UDim2.new(0, 6, 0, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "AuraMods"
+statusLabel.TextColor3 = Color3.fromRGB(255,255,255)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 11
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.ZIndex = 6
+statusLabel.Active = false
+statusLabel.Parent = openBtn
+
+openBtn.MouseEnter:Connect(function()
+    TweenService:Create(statusBar, TweenInfo.new(0.2), {BackgroundTransparency = 0.15}):Play()
+end)
+openBtn.MouseLeave:Connect(function()
+    TweenService:Create(statusBar, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play()
+end)
+openBtn.MouseButton1Click:Connect(function()
+    slideOut(statusBar, function()
+        main.Visible = true
+        slideIn(main)
+    end)
+end)
+
+draggable(statusBar, dragHandle)
+
+local gameName = "Unknown"
+task.spawn(function()
+    local ok, info = pcall(function()
+        return MarketplaceService:GetProductInfo(game.PlaceId)
+    end)
+    if ok and info and info.Name then gameName = info.Name end
+end)
+
+local function fitStatusBar(text)
+    local size = TextService:GetTextSize(text, 11, Enum.Font.Gotham, Vector2.new(2000, 30))
+    local targetWidth = size.X + 55
+    if targetWidth < 200 then targetWidth = 200 end
+    if targetWidth > 900 then targetWidth = 900 end
+    TweenService:Create(statusBar, TweenInfo.new(0.35, Enum.EasingStyle.Quad), {
+        Size = UDim2.new(0, targetWidth, 0, 30)
+    }):Play()
+end
+
+-- X butonu tıklama
+closeBtn.MouseButton1Click:Connect(function()
+    slideOut(main, function()
+        statusBar.Visible = true
+        slideIn(statusBar)
+    end)
+end)
+
+-- Başlat
+main.Visible = false
+slideIn(main)
+draggable(main, header)
+
+-- FPS sayacı
+local frames, lastTime, fps = 0, tick(), 0
+RunService.RenderStepped:Connect(function()
+    frames = frames + 1
+    local now = tick()
+    if now - lastTime >= 1 then
+        fps = frames
+        frames = 0
+        lastTime = now
+    end
+end)
+
+-- Status bar içeriği
+task.spawn(function()
+    while gui.Parent do
+        local ping = 0
+        pcall(function()
+            ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        end)
+        local txt = string.format("AuraMods %s  |  %s  |  %s  |  FPS: %d  |  Ping: %dms", VERSION, player.Name, gameName, fps, ping)
+        statusLabel.Text = txt
+        fitStatusBar(txt)
+        task.wait(0.5)
+    end
+end)
